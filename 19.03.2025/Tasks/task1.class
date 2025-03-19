@@ -1,0 +1,107 @@
+package Package1;
+import java.sql.*;
+import java.util.Scanner;
+
+public class task1 {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+       
+        String url = "jdbc:mysql://localhost:3306/project";
+        String user = "root";
+        String password = "root";
+
+        System.out.println("Enter your type: new_user or exist_user");
+        String choice = sc.next();
+
+        if (choice.equalsIgnoreCase("new_user")) {
+            String insertQuery = "INSERT INTO detailss (username, collage, event, gmail, userpass) VALUES (?, ?, ?, ?, ?)";
+
+            try (Connection con = DriverManager.getConnection(url, user, password);
+                 PreparedStatement ps = con.prepareStatement(insertQuery)) {
+
+                System.out.println("Connection Established Successfully...");
+
+                sc.nextLine(); 
+
+                System.out.print("Enter your username: ");
+                String username = sc.nextLine();
+
+                System.out.print("Enter your college name: ");
+                String college = sc.nextLine();
+
+                System.out.print("Enter event name: ");
+                String event = sc.nextLine();
+
+                System.out.print("Enter your email: ");
+                String gmail = sc.next();
+
+                System.out.print("Create a password: ");
+                String userpass = sc.next();
+
+                ps.setString(1, username);
+                ps.setString(2, college);
+                ps.setString(3, event);
+                ps.setString(4, gmail);
+                ps.setString(5, userpass);
+
+                int rows = ps.executeUpdate();
+                System.out.println(rows + " row(s) inserted successfully.");
+
+            } catch (SQLIntegrityConstraintViolationException e) {
+                System.out.println("Error: Email already exists! Please use a different email.");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else if (choice.equalsIgnoreCase("exist_user")) {
+            System.out.print("Enter your email: ");
+            String gmail = sc.next();
+
+            System.out.print("Enter your password: ");
+            String userpass = sc.next();
+
+            String selectQuery = "SELECT * FROM detailss WHERE gmail = ? AND userpass = ?";
+            String updateQuery = "UPDATE detailss SET username = ?, collage = ?, event = ? WHERE gmail = ?";
+
+            try (Connection con = DriverManager.getConnection(url, user, password);
+                 PreparedStatement selectPs = con.prepareStatement(selectQuery)) {
+
+                selectPs.setString(1, gmail);
+                selectPs.setString(2, userpass);
+
+                ResultSet rs = selectPs.executeQuery();
+
+                if (rs.next()) {
+                    System.out.println("Login successful! Update your details:");
+
+                    sc.nextLine(); 
+                    System.out.print("Enter new username: ");
+                    String newUsername = sc.nextLine();
+
+                    System.out.print("Enter new college name: ");
+                    String newCollege = sc.nextLine();
+
+                    System.out.print("Enter new event name: ");
+                    String newEvent = sc.nextLine();
+
+                    try (PreparedStatement updatePs = con.prepareStatement(updateQuery)) {
+                        updatePs.setString(1, newUsername);
+                        updatePs.setString(2, newCollege);
+                        updatePs.setString(3, newEvent);
+                        updatePs.setString(4, gmail);
+
+                        int rows = updatePs.executeUpdate();
+                        System.out.println(rows + " row(s) updated successfully.");
+                    }
+                } else {
+                    System.out.println("Incorrect email or password. Please try again.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Invalid choice! Please enter either 'new_user' or 'exist_user'.");
+        }
+        sc.close();
+    }
+}
